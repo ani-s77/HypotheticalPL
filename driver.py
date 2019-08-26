@@ -1,9 +1,25 @@
 import random
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import pandas as pd
+desired_width = 320
+pd.set_option('display.width', desired_width)
+
+# use creds to create a client to interact with the Google Drive API
+scope = ['https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name('C:/Users/Anirudh/PycharmProjects/soccer/client_secret.json', scope)
+client = gspread.authorize(creds)
+sheet = client.open("Hypothetical PL 2").sheet1
+s2 = client.open("Hypothetical PL 2").worksheet("Fixtures")
 
 
 # Reads player names, FIFA ratings, set piece takers, and tactics from a file
 def read_players(file_path):
-    file = open(file_path, "r", encoding="UTF8")
+    teams_map = {"mci": 0, "liv": 1, "che": 2, "tot": 3, "ars": 4, "mun": 5, "wol": 6, "eve": 7, "lei": 8, "whu": 9,
+                 "wat": 10, "cry": 11, "new": 12, "bou": 13, "bur": 14, "sou": 15, "shu": 16, "bha": 17, "lee": 18,
+                 "for": 19, "c": 20, "1": 21, "2": 22, "n": 23, "t": 24, "g": 25, "cl": 26, "el": 27, "bar": 28,
+                 "rma": 29, "juv": 30, "atm": 31, "fcb": 32, "bvb": 33, "int": 34, "psg": 35, "ol": 36}
+    col = (teams_map[file_path] + 1) * 2
     count = 0
     team_name = "Team"
     num_defs = 4
@@ -12,26 +28,25 @@ def read_players(file_path):
     tactics = 1
     ratings = []
     player_names = []
-    for line in file:
+    v1 = sheet.col_values(col)
+    v2 = sheet.col_values(col + 1)
+    while count < 19:
         if count == 0:
-            team_name = line[:-1]
+            team_name = v1[1]
         elif count < 15:
-            details = line.split()
-            name = details[0]
-            if len(details) > 2:
-                for part in details[1:-1]:
-                    name += (" " + part)
-            ratings.append(details[-1])
-            player_names.append(name)
+            player_names.append(v1[1 + count])
+            ratings.append(int(v2[1 + count]))
         elif count == 15:
-            num_defs = int(line)
+            num_defs = int(v1[16])
         elif count == 16:
-            pk_taker = int(line)
+            pk_taker = int(v1[17]) - 3
         elif count == 17:
-            fk_taker = int(line)
+            fk_taker = int(v1[18]) - 3
         else:
-            tactics = int(line)
+            tactics = int(v1[19])
         count += 1
+    if tactics == 0:
+        tactics = 1
     return team_name, num_defs, pk_taker, fk_taker, tactics, ratings, player_names
 
 
@@ -45,12 +60,12 @@ def get_scoreline(home_fifa_ratings, away_fifa_ratings, home_tactics, away_tacti
     for i in range(0, 11):
         home_total_fifa_rating += int(home_fifa_ratings[i])
         away_total_fifa_rating += int(away_fifa_ratings[i])
-    for i in range(12, 14):
+    for i in range(11, 14):
         home_total_fifa_rating += (int(home_fifa_ratings[i]) // 2)
         away_total_fifa_rating += (int(away_fifa_ratings[i]) // 2)
 
     # Sets the home advantage
-    home_total_fifa_rating += 33
+    #home_total_fifa_rating += 33
 
     # Sets tactical advantages
     if home_tactics < 7 and away_tactics < 7:
@@ -280,7 +295,7 @@ def determine_goal_data(fifa_ratings, num_defs, num_scored):
     for i in fifa_ratings[11:14]:
         adj_ratings.append(int(i))
 
-    prob_bins = [0]
+    prob_bins = [50]
     for i in adj_ratings[1:]:
         prob_bins.append(int(prob_bins[-1]) + int(i))
 
@@ -353,7 +368,7 @@ def show_result(goal_data, player_names, opp_player_names, pk_taker, fk_taker):
             else:
                 goal_string += (", a " + player_names[goal_data[1][i]] + " (")
             if random.randint(0, 20) == 2:
-                goal_type = " [WONDER GOAL]"
+                goal_type = " [BANGER]"
         minute = goal_data[2][i]
         if minute <= 45:
             goal_string += (str(minute) + "')" + goal_type + "\n")
@@ -366,12 +381,45 @@ def show_result(goal_data, player_names, opp_player_names, pk_taker, fk_taker):
     return goal_string
 
 
-def play(team_1, team_2):
+def penalties():
+    home_score = 0
+    away_score = 0
+    home_left = 5
+    away_left = 5
+    while away_left > 0:
+        rnd = random.randint(0, 5)
+        if rnd != 4:
+            home_score += 1
+        home_left -= 1
+        if home_score > away_score + away_left:
+            return home_score, away_score
+        if away_score > home_score + home_left:
+            return home_score, away_score
+        rnd = random.randint(0, 5)
+        if rnd != 4:
+            away_score += 1
+        away_left -= 1
+        if home_score > away_score + away_left:
+            return home_score, away_score
+        if away_score > home_score + home_left:
+            return home_score, away_score
+    while 0 == 0:
+        rnd_1 = random.randint(0, 3)
+        rnd_2 = random.randint(0, 3)
+        if rnd_1 != 2:
+            home_score += 1
+        if rnd_2 != 2:
+            away_score += 1
+        if home_score != away_score:
+            return home_score, away_score
+
+
+def play(team_1, team_2, cup):
 
     home_short_name = team_1
     away_short_name = team_2
-    home_file_path = "C:\\Users\\Anirudh\\SIM\\h" + home_short_name + ".txt"
-    away_file_path = "C:\\Users\\Anirudh\\SIM\\h" + away_short_name + ".txt"
+    home_file_path = home_short_name
+    away_file_path = away_short_name
     home_name, home_defs, home_pk_taker, home_fk_taker, home_tactics, home_fifa_ratings, home_player_names = \
         read_players(home_file_path)
     away_name, away_defs, away_pk_taker, away_fk_taker, away_tactics, away_fifa_ratings, away_player_names = \
@@ -382,7 +430,12 @@ def play(team_1, team_2):
     home_goal_data = determine_goal_data(home_fifa_ratings, home_defs, home_goals)
     away_goal_data = determine_goal_data(away_fifa_ratings, away_defs, away_goals)
 
-    result = home_name + " " + str(home_goals) + "-" + str(away_goals) + " " + away_name + "\n" + "\n"
+    pen_score = ""
+    if cup == 1 and home_goals == away_goals:
+        home_pens, away_pens = penalties()
+        pen_score = "(" + str(home_pens) + "-" + str(away_pens) + " p) "
+
+    result = home_name + " " + str(home_goals) + "-" + str(away_goals) + " " + pen_score + away_name + "\n" + "\n"
     result += (show_result(home_goal_data, home_player_names, away_player_names, home_pk_taker, home_fk_taker))
     if home_goals != 0:
         result += "\n"
@@ -392,9 +445,10 @@ def play(team_1, team_2):
 
     home_player_ratings = get_ratings(home_goal_data, away_goals, home_defs)
     away_player_ratings = get_ratings(away_goal_data, home_goals, away_defs)
-    # for i in range(0, 14):
-    #     result += ("{:<25}".format(home_player_names[i] + ": " + str(round(home_player_ratings[i], 1))) +
-    #                "{:<25}".format(away_player_names[i] + ": " + str(round(away_player_ratings[i], 1))) + "\n")
+    # Prints player ratings
+    for i in range(0, 14):
+        result += (str.ljust(home_player_names[i] + ": " + str(round(home_player_ratings[i], 1)), 25) +
+                   str.ljust(away_player_names[i] + ": " + str(round(away_player_ratings[i], 1)), 25) + "\n")
     motm, dotm = get_motm_and_dotm(home_player_names, away_player_names, home_player_ratings, away_player_ratings)
     result += ("Man of the match: " + motm + "\nDonkey of the match: " + dotm + "\n\n")
 
@@ -429,17 +483,20 @@ def play_league(team_list):
     team_data = {}
 
     for team in team_list:
-        team_name, _, _, _, _, _, player_names = read_players("C:\\Users\\Anirudh\\SIM\\h" + team + ".txt")
+        team_name, _, _, _, _, _, player_names = read_players(team)
         table[team] = [team_name, 0, 0, 0, 0, 0, 0, 0, 0]
         player_data = []
         for name in player_names:
             player_data.append([name, 0, 0, 0.0])
         team_data[team] = player_data
 
+    count = 1
     for gameweek in matches:
+        print("Gameweek " + str(int(count)))
+        count += 1
         for game in gameweek:
             print(game[0] + " vs " + game[1])
-            result, hgd, agd, _, _, hpr, apr, _, _ = play(game[0], game[1])
+            result, hgd, agd, _, _, hpr, apr, _, _ = play(game[0], game[1], 0)
             print(result)
             hg = len(hgd[0])
             ag = len(agd[0])
@@ -523,14 +580,22 @@ def play_league(team_list):
         print(str(rating[1]) + ": " + str(rating[0]))
 
 
-def play_week(teams):
+def play_games(teams, cup):
     if len(teams) % 2 != 0:
         exit(2)
     for i in range(0, len(teams) // 2):
-        print(play(teams[2 * i], teams[2 * i + 1])[0])
+        print(play(teams[2 * i], teams[2 * i + 1], cup)[0])
 
 
-string = "1 mun 2 n"
+def play_week(teams):
+    play_games(teams, 0)
+
+
+def play_cup_round(teams):
+    play_games(teams, 1)
+
+
+string = "eve rma eve rma eve rma eve rma new eve new eve new eve whu tot"
 playing_teams = string.split()
-# random.shuffle(playing_teams)
-play_league(playing_teams)
+#random.shuffle(playing_teams)
+play_cup_round(playing_teams)
