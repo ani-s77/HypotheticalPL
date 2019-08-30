@@ -4,11 +4,10 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 
 # Reads data from a Google sheet, read the manual (1) to know more
-scope = ['https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('C:/Users/Anirudh/PycharmProjects/soccer/client_secret.json',
-                                                         scope)
+scope = ["https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("Path to client_secret.json", scope)
 client = gspread.authorize(creds)
-sheet = client.open("Hypothetical PL 2").worksheet("Rosters")
+sheet = client.open("Workbook name").worksheet("Squad sheet name")
 
 
 # Reads player names, FIFA ratings, set piece takers, and tactics from the sheet
@@ -35,24 +34,24 @@ def read_players(team):
         # The first row is the team name
         if count == 0:
             team_name = v1[1]
-        # The next 14 rows are player names and ratings, see manual (2) to adjust number of players
+        # The next 14 rows are player names and ratings
         elif count < 15:
             player_names.append(v1[1 + count])
             ratings.append(int(v2[1 + count]))
         # Followed by number of defenders
         elif count == 15:
             num_defs = int(v1[16])
-        # Penalty taker
+        # Row number of penalty taker
         elif count == 16:
             pk_taker = int(v1[17]) - 3
-        # Free kick taker
+        # Row number of free kick taker
         elif count == 17:
             fk_taker = int(v1[18]) - 3
         # Tactics
         else:
             tactics = int(v1[19])
         count += 1
-    # See manual (3) for order of entering formations
+    # See manual (2) for order of entering formations
 
     # Sets default tactics to counter attack
     if tactics == 0:
@@ -78,7 +77,7 @@ def get_scoreline(home_fifa_ratings, away_fifa_ratings, home_tactics, away_tacti
     # Sets the home advantage
     home_total_fifa_rating += 33
 
-    # Sets tactical advantages, see manual (4) for how tactics work
+    # Sets tactical advantages, see manual (3) for how tactics work
     if home_tactics < 7 and away_tactics < 7:
         home_tactics %= 3
         away_tactics %= 3
@@ -259,7 +258,7 @@ def get_ratings(goal_data, num_conceded, num_defs):
     return ratings
 
 
-# Determines scorers, assisters, and minutes. See manual (5)
+# Determines scorers, assisters, and minutes. See manual (4)
 def determine_goal_data(fifa_ratings, num_defs, num_scored):
 
     max_def = num_defs + 1
@@ -342,9 +341,9 @@ def determine_goal_data(fifa_ratings, num_defs, num_scored):
 
     minutes = []
     for i in range(0, len(goal_data[0])):
-        rnd = random.randint(0, 94) + 1
+        rnd = random.randint(0, 97) + 1
         if 10 < goal_data[0][i] < 14 or goal_data[1][i] > 10:
-            rnd = random.randint(0, 30) + 64
+            rnd = random.randint(0, 37) + 60
         minutes.append(rnd)
 
     goal_data.append(minutes)
@@ -517,7 +516,7 @@ def play(team_1, team_2, cup):
 
 
 # Returns a set of fixtures for a double round-robin league (i.e. PL, CL group)
-# See manual (6) for how to edit
+# See manual (5) for how to edit
 # Taken from like the fifth reply somewhere on Stack Overflow
 def fixtures(teams):
     n = len(teams)
@@ -626,7 +625,7 @@ def play_league(team_list):
         for j in range(0, len(final_table) - i - 1):
             if final_table[j][5] < final_table[j + 1][5]:
                 final_table[j], final_table[j + 1] = final_table[j + 1], final_table[j]
-            # Accounts for when points are same, see manual (7) to customize
+            # Accounts for when points are same, see manual (6) to customize
             elif final_table[j][5] == final_table[j + 1][5]:
                 if final_table[j][8] < final_table[j + 1][8]:
                     final_table[j], final_table[j + 1] = final_table[j + 1], final_table[j]
@@ -645,7 +644,7 @@ def play_league(team_list):
               "{:>4}".format(i[4]) + "{:>4}".format(i[5]) + "{:>4}".format(i[6]) + "{:>4}".format(i[7]) +
               "{:>4}".format(i[8]))
 
-    # Sets scorers, assisters, and ratings, see manual (8) to customize
+    # Sets scorers, assisters, and ratings, see manual (7) to customize
     high_scores = []
     high_assists = []
     ratings = []
@@ -691,5 +690,5 @@ def play_cup_round(teams):
 
 string = "tot ars liv eve mci mun che whu sou bou"
 playing_teams = string.split()
-# See manual (9) to adjust kinds of games you can play
-play_cup_round(playing_teams)
+# See manual (8) to adjust kinds of games you can play
+play_week(playing_teams)
