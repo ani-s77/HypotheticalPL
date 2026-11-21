@@ -14,9 +14,12 @@ CREDENTIALS_PATH = os.environ.get(
 scope = ["https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_PATH, scope)
 client = gspread.authorize(creds)
-sheet = client.open("HPL Season 4").worksheet("Rosters")
-sheet2 = client.open("HPL Season 4").worksheet("Database")
-sheet3 = client.open("HPL Season 4").worksheet("Injuries and Suspensions")
+# Workbook name can be overridden with HPL_WORKBOOK
+WORKBOOK_NAME = os.environ.get("HPL_WORKBOOK", "HPL Season 4")
+workbook = client.open(WORKBOOK_NAME)
+sheet = workbook.worksheet("Rosters")
+sheet2 = workbook.worksheet("Database")
+sheet3 = workbook.worksheet("Injuries and Suspensions")
 
 all_scorers = []
 all_assisters = []
