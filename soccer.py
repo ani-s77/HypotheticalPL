@@ -1,18 +1,25 @@
+import os
 import random
+import sys
 import gspread
 import math
 import time
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-# Reads data from a Google sheet, read the manual (1) to know more
+# Reads data from a Google sheet, see the README for setup
+# The service account key path comes from HPL_CREDENTIALS, defaulting to client_secret.json next to this file
+CREDENTIALS_PATH = os.environ.get(
+    "HPL_CREDENTIALS", os.path.join(os.path.dirname(os.path.abspath(__file__)), "client_secret.json"))
 scope = ["https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    "C:\\Users\\Anirudh\\PycharmProjects\\soccer\\client_secret.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_PATH, scope)
 client = gspread.authorize(creds)
-sheet = client.open("HPL Season 4").worksheet("Rosters")
-sheet2 = client.open("HPL Season 4").worksheet("Database")
-sheet3 = client.open("HPL Season 4").worksheet("Injuries and Suspensions")
+# Workbook name can be overridden with HPL_WORKBOOK
+WORKBOOK_NAME = os.environ.get("HPL_WORKBOOK", "HPL Season 4")
+workbook = client.open(WORKBOOK_NAME)
+sheet = workbook.worksheet("Rosters")
+sheet2 = workbook.worksheet("Database")
+sheet3 = workbook.worksheet("Injuries and Suspensions")
 
 all_scorers = []
 all_assisters = []
@@ -27,7 +34,7 @@ teams_map = {"ars": 1, "avl": 2, "bou": 3, "bha": 4, "car": 5, "che": 6, "cry": 
                 "acm": 30}
 formations_map = {"4-4-2": [4, 2, 2, 2], "4-3-3": [4, 3, 2, 1], "4-4-2 (D)": [4, 3, 1, 2], "3-4-3": [5, 2, 2, 1],
                   "3-4-1-2": [5, 2, 1, 2], "3-5-2": [5, 3, 0, 2], "5-2-3": [5, 2, 2, 1], "5-3-2": [5, 3, 0, 2],
-                  "3-5-1-1": {5, 3, 1, 1}, "5-4-1 (D)": {5, 3, 1, 1}, "5-4-1": {5, 2, 2, 1}}
+                  "3-5-1-1": [5, 3, 1, 1], "5-4-1 (D)": [5, 3, 1, 1], "5-4-1": [5, 2, 2, 1]}
 
 
 # Reads player names, FIFA ratings, set piece takers, and tactics from the sheet
@@ -1075,7 +1082,7 @@ def play(team_1, team_2, cup, big, read, leg_2=0, home=0, away=0):
 
 # Returns a set of fixtures for a double round-robin league (i.e. PL, CL group)
 # See manual (5) for how to edit
-# Taken from like the fifth reply somewhere on Stack Overflow
+# Round-robin fixtures (circle method), adapted from a Stack Overflow answer.
 def fixtures(teams):
     n = len(teams)
     matches = []
@@ -1364,8 +1371,14 @@ def play_from_file(file1_s, file2_s, big):
         print(result)
 
 
-string = "tot eve ars mci bou sou"
-playing_teams = string.split()
+if __name__ == "__main__":
+    # Team codes can be passed on the command line, e.g. python soccer.py tot eve ars mci
+    # Teams are paired in order: the first plays the second at home, the third plays the fourth, and so on
+    if len(sys.argv) > 1:
+        playing_teams = sys.argv[1:]
+    else:
+        string = "tot eve ars mci bou sou"
+        playing_teams = string.split()
 
-# See manual (8) to adjust kinds of games you can play
-play_week(playing_teams, 0)
+    # See "Game modes" in the README to adjust kinds of games you can play
+    play_week(playing_teams, 0)
