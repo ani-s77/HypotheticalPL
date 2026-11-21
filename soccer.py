@@ -1,3 +1,4 @@
+import os
 import random
 import gspread
 import math
@@ -5,10 +6,12 @@ import time
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-# Reads data from a Google sheet, read the manual (1) to know more
+# Reads data from a Google sheet, see the README for setup
+# The service account key path comes from HPL_CREDENTIALS, defaulting to client_secret.json next to this file
+CREDENTIALS_PATH = os.environ.get(
+    "HPL_CREDENTIALS", os.path.join(os.path.dirname(os.path.abspath(__file__)), "client_secret.json"))
 scope = ["https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    "C:\\Users\\Anirudh\\PycharmProjects\\soccer\\client_secret.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_PATH, scope)
 client = gspread.authorize(creds)
 sheet = client.open("HPL Season 4").worksheet("Rosters")
 sheet2 = client.open("HPL Season 4").worksheet("Database")
