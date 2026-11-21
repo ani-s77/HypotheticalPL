@@ -1,5 +1,6 @@
 import os
 import random
+import sys
 import gspread
 import math
 import time
@@ -1367,8 +1368,14 @@ def play_from_file(file1_s, file2_s, big):
         print(result)
 
 
-string = "tot eve ars mci bou sou"
-playing_teams = string.split()
+if __name__ == "__main__":
+    # Team codes can be passed on the command line, e.g. python soccer.py tot eve ars mci
+    # Teams are paired in order: the first plays the second at home, the third plays the fourth, and so on
+    if len(sys.argv) > 1:
+        playing_teams = sys.argv[1:]
+    else:
+        string = "tot eve ars mci bou sou"
+        playing_teams = string.split()
 
-# See manual (8) to adjust kinds of games you can play
-play_week(playing_teams, 0)
+    # See "Game modes" in the README to adjust kinds of games you can play
+    play_week(playing_teams, 0)
