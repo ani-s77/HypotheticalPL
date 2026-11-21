@@ -1078,7 +1078,7 @@ def play(team_1, team_2, cup, big, read, leg_2=0, home=0, away=0):
 
 # Returns a set of fixtures for a double round-robin league (i.e. PL, CL group)
 # See manual (5) for how to edit
-# Taken from like the fifth reply somewhere on Stack Overflow
+# Round-robin fixtures (circle method), adapted from a Stack Overflow answer.
 def fixtures(teams):
     n = len(teams)
     matches = []
