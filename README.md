@@ -19,7 +19,7 @@ All of the logic lives in `soccer.py`.
 - **Tactics:** each team picks a tactic number on its roster sheet. 1–3 work like rock-paper-scissors, and the winning side gets a rating boost and a chance of extra goals. 4 is park the bus (fewer goals), and 5 is all-out attack (more goals). See [Tactics](#tactics) below.
 - **Scorelines:** drawn from a probability table chosen by the rating gap between the two teams. When the gap is large there is a chance of a thrashing (+3 goals for the stronger side).
 - **Scorers and assisters:** weighted random "probability bins" built from each player's position and rating, so forwards score more often than defenders and goalkeepers never score (`determine_goal_data`). Penalties, free kicks and own goals are drawn separately. A goal is unassisted when the scorer and the assister are the same player.
-- **Player ratings:** points per match in the style of Fantasy Premier League (goals, assists, clean sheets and so on), plus a man of the match and a "donkey of the match".
+- **Player ratings:** points per match in the style of Fantasy Premier League (goals, assists, clean sheets and so on), plus a man of the match and a worst player of the match.
 - **Also simulated:** yellow and red cards, injuries, fatigue, two-leg cup ties, penalty shootouts and goal-by-goal commentary.
 
 ## What the Google Sheet does
@@ -113,7 +113,7 @@ For a neutral venue, remove the `home_total_fifa_rating += 20` line in `get_scor
 
 ## Notes
 
-- Rosters are fictional and intentionally unrealistic.
+- Rosters are fictional and intentionally unrealistic. These were created by real users doing transfers with each other, while I commissioned the other transfers.
 - Written in 2019–2020. The fixtures function is adapted from a Stack Overflow answer.
 - `oauth2client` is deprecated. The script still uses it, and could move to `gspread.service_account(filename=...)` with `google-auth`. That switch was left out because it could not be tested without credentials.
 - `HPL Season 4.xlsx` is a copy of the season 4 workbook.
